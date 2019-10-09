@@ -151,12 +151,12 @@ def getDumbledoresArmy():
 
 @app.route('/hogwarts-house')
 def getHogwartsHouse():
-    if houses == '-1':
-      # result = requests.get(base_url + 'houses/' + house_id + base_key) # NICE TRY  MUGGLE
-    else:
-      house_id = random.choice(houses)
-      result = requests.get(base_url + 'houses/' + house_id + base_key)
-
+  house_id = random.choice(houses)
+  if house_id == '-1':
+    result = "nice try muggle"
+    return result
+  else:
+    result = requests.get(base_url + 'houses/' + house_id + base_key)
     return make_response(jsonify(result.json()))
     
 
