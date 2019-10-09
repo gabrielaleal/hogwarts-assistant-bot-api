@@ -8,7 +8,7 @@ This project was made for the Intelligent Systems discipline of UFPE's Informati
 After you clone this repository, run the following commands:
 
 1. To install everything you need:
-```pip install requirements.txt```
+```pip3 install -r requirements.txt```
 
 2. To run your application:
 ```python3 app.py```
