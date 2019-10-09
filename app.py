@@ -166,15 +166,10 @@ def getHogwartsHouseDescription(house_id):
   if house_id == '-1':
     result = "nice try muggle"
   else:
-    request_result = requests.get(base_url + 'houses/' + house_id + base_key)
+    request_result = requests.get(base_url + 'houses/' + house_id + base_key).json()[0]
+    result = "It gets that name from " + request_result["founder"] + ", the founder. " + "Members of this house are usually remembered by their " + request_result["values"][0] + ", " + request_result["values"][1] + ", " + request_result["values"][2] + " and " + request_result["values"][3] + ". The house's coat of arms is " + request_result["colors"][0] + " and " + request_result["colors"][1] + " with a(n) " + request_result["mascot"] + " and the house's ghost is " + request_result["houseGhost"]
 
-    result = "It gets that name from " + request_result["founder"] + ", the founder. " + 
-    "Members of this house are usually remembered by their " + request_result["value"][0] + ", " + request_result["value"][1] + ", " + 
-    request_result["value"][2] + " and " + request_result["value"][3] + ". " + 
-    "The house's coat of arms is" + request_result["color"][0] + " and " + request_result["color"][1] + "with a(n)" + request_result["mascot"] + 
-    "and the house's ghost is" + request_result["ghost"]
-
-    return result
-
+  return result
+    
 if __name__ == '__main__':
     app.run(debug=True)
