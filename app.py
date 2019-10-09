@@ -112,7 +112,8 @@ wizards = [
 houses = ['5a05e2b252f721a3cf2ea33f',   #Gryffindor
          '5a05da69d45bd0a11bd5e06f',    #Ravenclaw
          '5a05dc8cd45bd0a11bd5e071',    #Slytherin
-         '5a05dc58d45bd0a11bd5e070']    #Hufflepuff
+         '5a05dc58d45bd0a11bd5e070',  #Hufflepuff
+         '-1']  # muggle 
 
 key = '$2a$10$nTxqS397nOQ5rnKbsC64K.UtL5RupVMqoVD59oqymkBq5PX9qg9y6'
 
@@ -150,8 +151,12 @@ def getDumbledoresArmy():
 
 @app.route('/hogwarts-house')
 def getHogwartsHouse():
-    house_id = random.choice(houses)
-    result = requests.get(base_url + 'houses/' + house_id + base_key)
+    if houses == '-1':
+      # result = requests.get(base_url + 'houses/' + house_id + base_key) # NICE TRY  MUGGLE
+    else:
+      house_id = random.choice(houses)
+      result = requests.get(base_url + 'houses/' + house_id + base_key)
+
     return make_response(jsonify(result.json()))
     
 
