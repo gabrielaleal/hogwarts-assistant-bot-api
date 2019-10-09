@@ -120,15 +120,20 @@ key = '$2a$10$nTxqS397nOQ5rnKbsC64K.UtL5RupVMqoVD59oqymkBq5PX9qg9y6'
 base_key = '?key=' + key
 base_url = 'https://www.potterapi.com/v1/'
 
-@app.route('/') # the method is GET by default
+@app.route('/')
 def home():
     return 'Hello, World', 200
 
 @app.route('/chocolate-frog')
 def getChocolateFrog():
-    return random.choice(wizards)
-  
+    wizard = random.choice(wizards)
+    response = "You got " + wizard["name"] + ". " + getCharacterDescription(wizard)
+    return response
 
+@app.route('/character')
+def getCharacterDescription(wizard):
+    return wizard["info"]
+  
 @app.route('/ministry-of-magic')
 def getMinistryOfMagic():
     result = requests.get(base_url + 'characters' + base_key + '&ministryOfMagic=true')
@@ -149,16 +154,27 @@ def getDumbledoresArmy():
     result = requests.get(base_url + 'characters' + base_key + '&dumbledoresArmy=true')
     return make_response(jsonify(result.json()))
 
-@app.route('/hogwarts-house')
-def getHogwartsHouse():
+@app.route('/sorting-hat')
+def sortingHat():
   house_id = random.choice(houses)
+  response = getHogwartsHouseDescription(house_id)
+  return response
+
+@app.route('/hogwarts-house')
+def getHogwartsHouseDescription(house_id):
+  
   if house_id == '-1':
     result = "nice try muggle"
-    return result
   else:
-    result = requests.get(base_url + 'houses/' + house_id + base_key)
-    return make_response(jsonify(result.json()))
-    
+    request_result = requests.get(base_url + 'houses/' + house_id + base_key)
+
+    result = "It gets that name from " + request_result["founder"] + ", the founder. " + 
+    "Members of this house are usually remembered by their " + request_result["value"][0] + ", " + request_result["value"][1] + ", " + 
+    request_result["value"][2] + " and " + request_result["value"][3] + ". " + 
+    "The house's coat of arms is" + request_result["color"][0] + " and " + request_result["color"][1] + "with a(n)" + request_result["mascot"] + 
+    "and the house's ghost is" + request_result["ghost"]
+
+    return result
 
 if __name__ == '__main__':
     app.run(debug=True)
