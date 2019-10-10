@@ -1,4 +1,4 @@
-from flask import Flask, make_response, jsonify
+from flask import Flask, make_response, jsonify, request
 import random
 import requests
 
@@ -109,67 +109,109 @@ wizards = [
   }
 ]
 
-houses = ['5a05e2b252f721a3cf2ea33f',   #Gryffindor
-         '5a05da69d45bd0a11bd5e06f',    #Ravenclaw
-         '5a05dc8cd45bd0a11bd5e071',    #Slytherin
-         '5a05dc58d45bd0a11bd5e070',  #Hufflepuff
-         '-1']  # muggle 
+houses = {
+  'Gryffindor': '5a05e2b252f721a3cf2ea33f',
+  'Ravenclaw': '5a05da69d45bd0a11bd5e06f',
+  'Slytherin': '5a05dc8cd45bd0a11bd5e071',
+  'Hufflepuff': '5a05dc58d45bd0a11bd5e070',
+  'Muggle': '-1'
+}
 
 key = '$2a$10$nTxqS397nOQ5rnKbsC64K.UtL5RupVMqoVD59oqymkBq5PX9qg9y6'
 
 base_key = '?key=' + key
 base_url = 'https://www.potterapi.com/v1/'
 
-@app.route('/')
+@app.route('/', methods=["POST"])
 def home():
-    return 'Hello, World', 200
+    json_request = request.get_json(force=True)
+    request_return = {}
+    if json_request["intent"] == "Sorting_Hat":
+        request_return["message"] = sortingHat()
+    elif json_request["intent"] == "Chocolate_Frog_Card":
+        request_return["message"] = getChocolateFrog()
+    elif json_request["intent"] == "Ministers_For_Magic":
+        request_return["message"] = getMinistryOfMagic()
+    elif json_request["intent"] == "Order_Of_The_Phoenix":
+        request_return["message"] = getOrderOfThePhoenix()
+    elif json_request["intent"] == "Dumbledores_Army":
+        request_return["message"] = getDumbledoresArmy()
+    elif json_request["intent"] == "Death_Eaters":
+        request_return["message"] = getDeathEat()
+    elif json_request["intent"] == "House_Info":
+        request_return["message"] = getHogwartsHouseDescription(json_request["house"])
+    elif json_request["intent"] == "Character_Info":
+        request_return["message"] = getCharacterDescriptionPlus(json_request["character"])
 
-@app.route('/chocolate-frog')
+    return request_return
+
 def getChocolateFrog():
     wizard = random.choice(wizards)
     response = "You got " + wizard["name"] + ". " + getCharacterDescription(wizard)
     return response
 
-@app.route('/character')
 def getCharacterDescription(wizard):
     return wizard["info"]
+
+def getCharacterDescriptionPlus(wizard):
+    request_result = requests.get(base_url + 'characters' + base_key + '&name=' + wizard).json()[0]
+    response = ""
+    response += "Name: " + request_result["name"] + "\n"
+    response += "Species: " + request_result["species"].capitalize() + "\n"
+    if 'role' in request_result:
+        response += "Role: " + request_result["role"].capitalize() + "\n"
+    if 'patronus' in request_result:
+        response += "Patronus: " + request_result["patronus"].capitalize() + "\n"
+    if 'house' in request_result:
+        response += "House: " + request_result["house"].capitalize() + "\n"
+    return response
   
-@app.route('/ministry-of-magic')
 def getMinistryOfMagic():
-    result = requests.get(base_url + 'characters' + base_key + '&ministryOfMagic=true')
-    return make_response(jsonify(result.json()))
+    request_result = requests.get(base_url + 'characters' + base_key + '&ministryOfMagic=true').json()
+    response = "The Minister for Magic is the political leader of the wizarding community in the United Kingdom and Ireland. Here is a list with some of them: "
+    for character in request_result:
+        response += "\n" + "- " + character["name"]
+    return response
 
-@app.route('/death-eaters')
 def getDeathEat():
-    result = requests.get(base_url + 'characters' + base_key + '&deathEater=true')
-    return make_response(jsonify(result.json()))
+    request_result = requests.get(base_url + 'characters' + base_key + '&deathEater=true').json()
+    response = "Death Eaters are what You-Know-Who's followers are called. Here is a list with some of them:"
+    for character in request_result:
+        response += "\n" + "- " + character["name"]
+    return response
 
-@app.route('/order-of-the-phoenix')
 def getOrderOfThePhoenix():
-    result = requests.get(base_url + 'characters' + base_key + '&orderOfThePhoenix=true')
-    return make_response(jsonify(result.json()))
+    request_result = requests.get(base_url + 'characters' + base_key + '&orderOfThePhoenix=true').json()
+    response = "The Order of the Phoenix was a secret society founded by Albus Dumbledore to oppose Lord Voldemort and his Death Eaters. Here is a list of it's members: "
+    for character in request_result:
+        response += "\n" + "- " + character["name"]
+    return response
 
-@app.route('/dumbledores-army')
 def getDumbledoresArmy():
-    result = requests.get(base_url + 'characters' + base_key + '&dumbledoresArmy=true')
-    return make_response(jsonify(result.json()))
+    request_result = requests.get(base_url + 'characters' + base_key + '&dumbledoresArmy=true').json()
+    response = "Dumbledore's Army was a secret organisation created by Hogwarts students to have proper Defence Against the Dark Arts in 1995. Here is a list of it's members: "
+    for character in request_result:
+        response += "\n" + "- " + character["name"]
+    return response
 
-@app.route('/sorting-hat')
 def sortingHat():
-  house_id = random.choice(houses)
-  response = getHogwartsHouseDescription(house_id)
-  return response
+    house_name = random.choice(list(houses.keys()))
+    if house_name == "Muggle":
+      response = "nice try muggle"
+    else:
+      response = "Congrats.... Welcome to " + house_name + ". " + getHogwartsHouseDescription(house_name)
+    return response
 
-@app.route('/hogwarts-house')
-def getHogwartsHouseDescription(house_id):
-  
-  if house_id == '-1':
-    result = "nice try muggle"
-  else:
-    request_result = requests.get(base_url + 'houses/' + house_id + base_key).json()[0]
-    result = "It gets that name from " + request_result["founder"] + ", the founder. " + "Members of this house are usually remembered by their " + request_result["values"][0] + ", " + request_result["values"][1] + ", " + request_result["values"][2] + " and " + request_result["values"][3] + ". The house's coat of arms is " + request_result["colors"][0] + " and " + request_result["colors"][1] + " with a(n) " + request_result["mascot"] + " and the house's ghost is " + request_result["houseGhost"]
+def getHogwartsHouseDescription(house_name):
+    request_result = requests.get(base_url + 'houses/' + houses[house_name] + base_key).json()[0]
 
-  return result
+    if house_name == "Ravenclaw": 
+        article = ' an '
+    else:
+        article = ' a '
+
+    result = "It gets that name from " + request_result["founder"] + ", the founder. " + "Members of this house are usually remembered by their " + request_result["values"][0] + ", " + request_result["values"][1] + ", " + request_result["values"][2] + " and " + request_result["values"][3] + ". The house's coat of arms is " + request_result["colors"][0] + " and " + request_result["colors"][1] + " with" + article + request_result["mascot"] + " and the house's ghost is " + request_result["houseGhost"] + "."
+    return result
     
 if __name__ == '__main__':
     app.run(debug=True)
